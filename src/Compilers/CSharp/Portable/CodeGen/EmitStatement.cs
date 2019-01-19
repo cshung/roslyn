@@ -1346,9 +1346,11 @@ oneMoreTime:
                 _builder.AddLocalConstantToScope(localConstantDef);
                 return null;
             }
-
+            
             if (IsStackLocal(local))
             {
+                // If a local variable is a stack local - it will not be reported to the 
+                // LocalSlotManager and thus it will not be able for debugging
                 return null;
             }
 

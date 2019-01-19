@@ -70,6 +70,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
             else
             {
+                // The set of stack locals are found using the StackOptimizerPass1 and reported here
                 stackLocals = new HashSet<LocalSymbol>(locals.Keys);
                 result = StackOptimizerPass2.Rewrite(src, locals);
             }
