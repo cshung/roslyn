@@ -1049,6 +1049,12 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
             else
             {
+                var boundTypeArguments = BindTypeArguments(typeArguments, diagnostics, basesBeingResolved);
+                if (unconstructedType.IsGenericType && options.IsAttributeTypeLookup() && boundTypeArguments.Any(bta => bta.Type.IsTypeParameter()))
+                {
+                    // error CS0416: 'T': an attribute argument cannot use type parameters
+                    diagnostics.Add(ErrorCode.ERR_AttrArgWithTypeVars, node.Location, boundTypeArguments.First(bta => bta.Type.IsTypeParameter()).ToDisplayString(SymbolDisplayFormat.CSharpErrorMessageFormat));
+                }
                 // It's not an unbound type expression, so we must have type arguments, and we have a 
                 // generic type of the correct arity in hand (possibly an error type). Bind the type 
                 // arguments and construct the final result. 
@@ -1056,14 +1062,14 @@ namespace Microsoft.CodeAnalysis.CSharp
                     unconstructedType,
                     node,
                     typeArguments,
-                    BindTypeArguments(typeArguments, diagnostics, basesBeingResolved),
+                    boundTypeArguments,
                     basesBeingResolved,
                     diagnostics);
             }
 
-            if (options.IsAttributeTypeLookup())
+            if (!Compilation.LanguageVersion.AllowGenericAttributes() && options.IsAttributeTypeLookup())
             {
-                // Generic type cannot be an attribute type.
+                // Generic type previously could not be an attribute type.
                 // Parser error has already been reported, just wrap the result type with error type symbol.
                 Debug.Assert(unconstructedType.IsErrorType());
                 Debug.Assert(resultType.IsErrorType());
